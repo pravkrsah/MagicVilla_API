@@ -42,6 +42,12 @@ namespace MagicVilla_VillaAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public ActionResult<VillaDTO> CreateVilla([FromBody]VillaDTO villaDTO)
         {
+            if (VillaStore.villaList
+                .FirstOrDefault(x => x.Name.ToLower() == villaDTO.Name.ToLower()) != null)
+            {
+                ModelState.AddModelError("CustomError", "Villa already Exists!");
+                return BadRequest(ModelState);
+            }
             if (villaDTO is null)
             {
                 return BadRequest(villaDTO); 
@@ -65,5 +71,47 @@ namespace MagicVilla_VillaAPI.Controllers
             //return Ok(villaDTO);
 
         }
+
+        [HttpDelete("{id:int}", Name = "DeleteVilla")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult DeleteVilla(int id)
+        {
+            if(id == 0)
+            {
+                return BadRequest();
+            }
+
+            var villa = VillaStore.villaList.Find(x => x.Id == id);
+
+            if (villa == null)
+            {
+                return NotFound();
+            }
+
+            VillaStore.villaList.Remove(villa);
+            return NoContent();
+        }
+
+        [HttpPut("{id:int}", Name = "UpdateVilla")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult UpdateVilla(int id, [FromBody]VillaDTO villaDTO)
+        { 
+            if (villaDTO is null || id != villaDTO.Id)
+            {
+                return BadRequest();
+            }
+
+            var villa = VillaStore.villaList.Find(x => x.Id == id);
+            villa.Name = villaDTO.Name;
+            villa.Occupancy = villaDTO.Occupancy;
+            villa.Sqft = villaDTO.Sqft;
+
+            return NoContent();
+        }
+
     }
 }
